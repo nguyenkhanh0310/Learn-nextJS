@@ -1,7 +1,7 @@
 import envConfig from "@/config";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 
-type CustomOptions = RequestInit & {
+type CustomOptions = Omit<RequestInit, 'method' > & {
   baseUrl?: string | undefined;
 };
 
