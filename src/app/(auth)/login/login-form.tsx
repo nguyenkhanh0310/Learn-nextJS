@@ -15,13 +15,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
-import envConfig from "@/config";
 import { useToast } from "@/hooks/use-toast";
-import { useAppContext } from "@/app/AppProvider";
+import authApiRequest from "@/apiRequests/auth";
+import { useRouter } from "next/navigation";
+import { clientSessionToken } from "@/lib/http";
 
 function LoginForm() {
   const { toast } = useToast();
-  const {setSessionToken} = useAppContext();
+  const router = useRouter();
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -34,47 +35,12 @@ function LoginForm() {
   // Form submit handle
   async function onSubmit(values: LoginBodyType) {
     try {
-      const result = await fetch(
-        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
-        {
-          body: JSON.stringify(values),
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-        }
-      ).then(async (res) => {
-        const payload = await res.json();
-        const data = {
-          status: res.status,
-          payload: payload,
-        };
-        if (!res.ok) {
-          throw data;
-        }
-        return data;
-      })
+      const result = await authApiRequest.login(values)
       toast({
         description: result.payload.message,
       })
-      const resultFromNextServer = await fetch('/api/auth', {
-        method: 'POST',
-        body: JSON.stringify(result),
-        headers: {
-          "Content-Type": "application/json",
-        }
-      }).then(async (res) => {
-        const payload = await res.json();
-        const data = {
-          status: res.status,
-          payload: payload,
-        };
-        if (!res.ok) {
-          throw data;
-        }
-        return data;
-      })
-      setSessionToken(resultFromNextServer.payload.data.token);
+      await authApiRequest.auth({sessionToken: result.payload.data.token})
+      router.push('/me');
     } catch (error: any) {
       const errors = error.payload.errors as {
         field: string
