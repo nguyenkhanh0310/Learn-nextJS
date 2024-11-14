@@ -22,5 +22,5 @@ export function middleware(request: NextRequest) {
 // See "Matching Paths" below to learn more
 export const config = {
   // Route yêu cầu authenticated và route private
-  matcher: [...privatePaths, authPaths],
+  matcher: ['/me', '/login', '/register'],
 };
